@@ -1,5 +1,4 @@
-
-// http://www.multiwingspan.co.uk/arduino.php?page=led5
+// Mock up of Music Thing Modular Turing Machine with Arduino
 
 int ledPin[] = {6, 7, 8, 9, 10, 11, 12, 13};
 
