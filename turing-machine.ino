@@ -1,9 +1,10 @@
 // Mock up of Music Thing Modular Turing Machine with Arduino
 // Added MsTimer, moved shiftregister code out of loop
 
-
 // Includes -------------------------------------------------
 #include <MsTimer2.h>
+#include <Adafruit_MCP4725.h>
+#include <Wire.h>
 
 // Declare vars ---------------------------------------------
 int ledPin[] = {6, 7, 8, 9, 10, 11, 12, 13};
@@ -17,13 +18,19 @@ int pot_2 = 0; // value read from pot 2 A1 random probablity
 unsigned long count = 400;
 unsigned long delay_ms = 0;
 
+Adafruit_MCP4725 MCP4725;
+
 // Setup ----------------------------------------------------
 void setup() {
+  // Initialize MCP4725
+  MCP4725.begin(0x62);
+  
   // Random
   randomSeed(analogRead(A5)); // Seed with random value from unused analog pin
-
+  
   // Init d
   d = random(0, 255); // generate initial random value
+  d = 0; // *** Test Count
   
   // initialize LED byte pins
   for (int i = 0; i < 8; i++) {
@@ -59,7 +66,10 @@ void loop() {
     count = 0;
 
     // rotate the byte
-    d = rotateByte(d, 1);
+    // d = rotateByte(d, 1);
+    // d = leftRotate(d, 1);
+//    d = rightRotate(d, 1);
+d += 1; // *** Test Count
     
     // If the random value is less than the probability pot value flip the last bit of te byte
     if (r < pot_2) {
@@ -68,9 +78,16 @@ void loop() {
   
     // Display byte
     displayBinary(d);
-    
+
+    printBits(d);
+
+    // Output Value
     // Display value
     analogWrite(cv_out_pin, d);
+
+    // MCP Out
+    MCP4725.setVoltage(d, false);
+    Serial.println((analogRead(A6) * 5.0 )/ 1024.0); // **** Test Counter 
   }
 }
 
@@ -80,10 +97,30 @@ void setCount() {
   count ++;
 }
 
+// Left Rotate
+int leftRotate(int n, unsigned int d) {
+  return (n << d) | (n >> (8 - d));
+}
+
+// Right Rotate
+int rightRotate(int n, unsigned int d) {
+  return (n >> d) | (n << (8 - d));
+}
+
 // rotate byte
 byte rotateByte(byte value, int amount) {
   // shift the byte and move the last bit to the end
   return (value >> amount) | (value << (8 - amount));
+}
+
+// Flip last bit
+int flipLast(int n) {
+  return n ^= 0b00000001;
+}
+
+// Flip first bit
+int fliFirst(int n) {
+   return n ^= 0b10000000;
 }
 
 // Display byte with LEDs on pins 6 to 13
@@ -96,6 +133,19 @@ void displayBinary(byte numToShow) {
       digitalWrite(ledPin[i], LOW); 
     }
   }
+}
+
+// Print Bits 
+void printBits(byte n) {
+  // Loop over LED pins and display the matching bit of the byte
+  for (int i = 0; i < 8; i++) {
+    if (bitRead(n, i) == 1) {
+      Serial.print("1");
+    } else {
+      Serial.print("0"); 
+    }
+  }
+  Serial.println();
 }
 
 // Read Pots
