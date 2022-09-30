@@ -22,15 +22,17 @@ Adafruit_MCP4725 MCP4725;
 
 // Setup ----------------------------------------------------
 void setup() {
+  // Testing
+  Serial.begin(9600);
+  
   // Initialize MCP4725
-  MCP4725.begin(0x62);
+  MCP4725.begin(0x60);
   
   // Random
   randomSeed(analogRead(A5)); // Seed with random value from unused analog pin
   
   // Init d
   d = random(0, 255); // generate initial random value
-  d = 0; // *** Test Count
   
   // initialize LED byte pins
   for (int i = 0; i < 8; i++) {
@@ -40,9 +42,6 @@ void setup() {
   // initialize LED value pin
   pinMode(cv_out_pin, OUTPUT);
   analogWrite(cv_out_pin, d);
-  
-  // Testing
-  Serial.begin(9600);
 
   // setup timer
   MsTimer2::set(1, setCount); // Call setCount every MS
@@ -66,10 +65,9 @@ void loop() {
     count = 0;
 
     // rotate the byte
-    // d = rotateByte(d, 1);
+    d = rotateByte(d, 1);
     // d = leftRotate(d, 1);
-//    d = rightRotate(d, 1);
-d += 1; // *** Test Count
+    // d = rightRotate(d, 1);
     
     // If the random value is less than the probability pot value flip the last bit of te byte
     if (r < pot_2) {
@@ -79,15 +77,18 @@ d += 1; // *** Test Count
     // Display byte
     displayBinary(d);
 
-    printBits(d);
+     printBits(d);
 
     // Output Value
     // Display value
     analogWrite(cv_out_pin, d);
 
     // MCP Out
-    MCP4725.setVoltage(d, false);
-    Serial.println((analogRead(A6) * 5.0 )/ 1024.0); // **** Test Counter 
+    // int out = d / 255.0 * 4096.0;
+    MCP4725.setVoltage((uint16_t) d, false);
+    // Serial.print(out);
+    // Serial.print(" - ");
+    Serial.println((analogRead(A6) * 5.0) / 1024.0); // **** Test Counter 
   }
 }
 
